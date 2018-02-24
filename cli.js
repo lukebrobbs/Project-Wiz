@@ -2,7 +2,8 @@
 
 const fs = require("fs");
 const child_ps = require("child_process");
-const [, , ...args] = process.argv;
+let [, , ...args] = process.argv;
+if (!args.length) args = "untitled";
 const dirname = __dirname;
 
 function createDirectory(path, cb) {
@@ -17,7 +18,7 @@ function createCopy(src, dest, cb) {
   fs.copyFile(src, dest, cb);
 }
 
-function gitInit(cmd, cb) {
+function terminalCommand(cmd, cb) {
   child_ps.exec(cmd, cb);
 }
 
@@ -53,9 +54,20 @@ function createProject() {
                           `./${args}/package.json`,
                           err => {
                             if (err) console.log(err);
-                            gitInit("git init", err => {
+                            terminalCommand("git init", err => {
                               if (err) return "git init failed";
-                              console.log("Sorted!");
+                              terminalCommand(
+                                "npm i",
+                                {
+                                  cwd: `./${args}`
+                                },
+                                (err, stdout, stderr) => {
+                                  if (err) console.log("npm i failed");
+                                  console.log(stdout);
+                                  console.log(stderr);
+                                  console.log("Sorted!");
+                                }
+                              );
                             });
                           }
                         );
