@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 const fs = require("fs");
-const child_ps = require("child_process");
+const { exec } = require("child_process");
 let [, , ...args] = process.argv;
 if (!args.length) args = "untitled";
 const dirname = __dirname;
+const finishUp = `
+cd ./${args}
+ls -al --color --group-directories-first`;
 
 function createDirectory(path, cb) {
   fs.mkdir(path, cb);
@@ -18,9 +21,9 @@ function createCopy(src, dest, cb) {
   fs.copyFile(src, dest, cb);
 }
 
-function terminalCommand(cmd, cb) {
-  child_ps.exec(cmd, cb);
-}
+// function terminalCommand(cmd, cb) {
+//   exec(cmd, cb);
+// }
 
 function createProject() {
   createDirectory(`./${args}`, err => {
@@ -54,18 +57,46 @@ function createProject() {
                           `./${args}/package.json`,
                           err => {
                             if (err) console.log(err);
-                            terminalCommand("git init", err => {
+                            // git init in new dir
+                            exec("git init", err => {
                               if (err) return "git init failed";
-                              terminalCommand(
+                              console.log(
+                                "\x1b[33m%s\x1b[0m",
+                                `\nCreating new Node.JS project ${args}...`
+                              );
+                              console.log(
+                                "\x1b[33m%s\x1b[0m",
+                                `\ngit initialized for ${args}...\n`
+                              );
+                              // npm i in new dir
+                              exec(
                                 "npm i",
-                                {
-                                  cwd: `./${args}`
-                                },
+                                { cwd: `./${args}` },
                                 (err, stdout, stderr) => {
-                                  if (err) console.log("npm i failed");
-                                  console.log(stdout);
-                                  console.log(stderr);
-                                  console.log("Sorted!");
+                                  if (err) console.log(`exec error: ${error}`);
+                                  console.log(
+                                    "\x1b[33m%s\x1b[0m",
+                                    `NPM stdout for ${args}:`
+                                  );
+                                  console.log(`${stdout}`);
+                                  console.log(
+                                    "\x1b[33m%s\x1b[0m",
+                                    `NPM stderr for ${args}:`
+                                  );
+                                  console.log(`${stderr}`);
+                                  // list files in new dir
+                                  exec(
+                                    finishUp,
+                                    { cwd: `${args}` },
+                                    (err, stdout, stderr) => {
+                                      if (err) console.log(stderr);
+                                      console.log(
+                                        "\x1b[33m%s\x1b[0m",
+                                        `Sorted!\nNew files created in ${args}:`
+                                      );
+                                      console.log(`${stdout}`);
+                                    }
+                                  );
                                 }
                               );
                             });
