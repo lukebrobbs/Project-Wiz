@@ -7,7 +7,7 @@ if (!args.length) args = "untitled";
 const dirname = __dirname;
 const finishUp = `
 cd ./${args}
-ls -al --color --group-directories-first`;
+ls -al`;
 
 function createDirectory(path, cb) {
   fs.mkdir(path, cb);
